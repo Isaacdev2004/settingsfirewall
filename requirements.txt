@@ -1,3 +1,14 @@
-# This file points to the backend requirements
-# The actual requirements are in backend/requirements.txt
--r backend/requirements.txt
+Flask>=3.0.0
+SQLAlchemy>=2.0.0
+Flask-SQLAlchemy>=3.0.0
+Flask-Login>=0.6.0
+Flask-WTF>=1.0.0
+Flask-Migrate>=4.0.0
+PyJWT>=2.8.0
+Werkzeug>=3.0.0
+python-dotenv>=1.0.0
+gunicorn>=21.0.0
+firebase-admin>=6.0.0
+requests>=2.31.0
+cryptography>=42.0.0
+bcrypt>=4.0.0
