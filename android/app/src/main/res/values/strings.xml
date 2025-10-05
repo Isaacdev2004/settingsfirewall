@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">System Manager</string>
+    <string name="license_activation">License Activation</string>
+    <string name="license_status">License Status</string>
+    <string name="enter_license_key">Enter License Key</string>
+    <string name="activate_license">Activate License</string>
+    <string name="validate_license">Validate License</string>
+    <string name="refresh_status">Refresh Status</string>
+    <string name="status_active">Active</string>
+    <string name="status_expired">Expired</string>
+    <string name="status_revoked">Revoked</string>
+    <string name="expires_never">Never</string>
+    <string name="days_remaining">Days remaining: %d</string>
+    <string name="license_expiring_soon">License Expiring Soon</string>
+    <string name="license_expires_tomorrow">Your license expires tomorrow!</string>
+    <string name="license_expires_today">Your license expires today!</string>
+    <string name="license_expires_in_days">Your license expires in %d days</string>
+    <string name="license_invalid">License Invalid</string>
+    <string name="license_revoked_message">Your license has been revoked or expired. Please contact support.</string>
+    <string name="activation_successful">License activated successfully!</string>
+    <string name="activation_failed">Activation failed: %s</string>
+    <string name="validation_successful">License is valid</string>
+    <string name="validation_failed">Validation failed: %s</string>
+    <string name="enter_license_key_hint">Please enter a license key</string>
+    <string name="notification_permission_granted">Notification permission granted</string>
+    <string name="notification_permission_denied">Notification permission denied</string>
+    <string name="about_description">This app manages your software license and provides secure access to system features.</string>
+</resources>

@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Devices - License Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Device Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+        </div>
+    </div>
+</div>
+
+<!-- Devices Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Registered Devices</h5>
+    </div>
+    <div class="card-body">
+        {% if devices %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Device ID</th>
+                            <th>License Key</th>
+                            <th>Device Info</th>
+                            <th>Registered</th>
+                            <th>Last Validated</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for device in devices %}
+                        <tr>
+                            <td>
+                                <code>{{ device.device_id }}</code>
+                                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard('{{ device.device_id }}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </td>
+                            <td>
+                                <code>{{ device.license.key }}</code>
+                            </td>
+                            <td>
+                                {% if device.device_info %}
+                                    <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                          title="{{ device.device_info }}">
+                                        {{ device.device_info }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">No info</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ device.registered_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if device.last_validated %}
+                                    {{ device.last_validated.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if device.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-info" 
+                                            onclick="viewDeviceDetails('{{ device.device_id }}')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    {% if device.fcm_token %}
+                                        <button type="button" class="btn btn-sm btn-warning" 
+                                                onclick="sendNotification('{{ device.device_id }}')">
+                                            <i class="fas fa-bell"></i> Notify
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-mobile-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No devices registered</h5>
+                <p class="text-muted">Devices will appear here once they activate a license.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Device Details Modal -->
+<div class="modal fade" id="deviceDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Device Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="deviceDetailsContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Send Notification Modal -->
+<div class="modal fade" id="sendNotificationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="notificationForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="notificationTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="notificationTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notificationMessage" class="form-label">Message</label>
+                        <textarea class="form-control" id="notificationMessage" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Notification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success feedback
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-outline-secondary');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+
+function viewDeviceDetails(deviceId) {
+    document.getElementById('deviceDetailsContent').innerHTML = `
+        <div class="text-center py-4">
+            <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+            <p class="mt-2 text-muted">Loading device details...</p>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deviceDetailsModal'));
+    modal.show();
+    
+    // Simulate loading
+    setTimeout(() => {
+        document.getElementById('deviceDetailsContent').innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Device Information</h6>
+                    <p><strong>Device ID:</strong> <code>${deviceId}</code></p>
+                    <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+                    <p><strong>Registered:</strong> 2024-01-01 12:00:00</p>
+                    <p><strong>Last Validated:</strong> 2024-01-01 15:30:00</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>License Information</h6>
+                    <p><strong>License Key:</strong> <code>LICENSE-123-ABC</code></p>
+                    <p><strong>License Status:</strong> <span class="badge bg-success">Active</span></p>
+                    <p><strong>Expires:</strong> 2024-01-08 12:00:00</p>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <h6>Device Info</h6>
+                    <p class="text-muted">Android 13, Samsung Galaxy S21, API Level 33</p>
+                </div>
+            </div>
+        `;
+    }, 1000);
+}
+
+function sendNotification(deviceId) {
+    document.getElementById('notificationForm').reset();
+    const modal = new bootstrap.Modal(document.getElementById('sendNotificationModal'));
+    modal.show();
+    
+    // Store device ID for form submission
+    document.getElementById('notificationForm').setAttribute('data-device-id', deviceId);
+}
+
+document.getElementById('notificationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const deviceId = this.getAttribute('data-device-id');
+    const title = document.getElementById('notificationTitle').value;
+    const message = document.getElementById('notificationMessage').value;
+    
+    // Here you would make an AJAX call to send the notification
+    console.log('Sending notification to device:', deviceId, 'Title:', title, 'Message:', message);
+    
+    // Show success message
+    alert('Notification sent successfully!');
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('sendNotificationModal'));
+    modal.hide();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - License Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Send Notifications</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendNotificationModal">
+            <i class="fas fa-paper-plane me-2"></i>Send Notification
+        </button>
+    </div>
+</div>
+
+<!-- Notification Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Send Push Notification</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Notification Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required 
+                               placeholder="Enter notification title">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="4" required 
+                                  placeholder="Enter notification message"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="target" class="form-label">Target</label>
+                        <select class="form-select" id="target" name="target">
+                            <option value="all">All Devices</option>
+                            <option value="active_licenses">Active Licenses Only</option>
+                            <option value="expiring_soon">Expiring Soon (7 days)</option>
+                            <option value="specific_license">Specific License</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="licenseSelectGroup" style="display: none;">
+                        <label for="license_key" class="form-label">License Key</label>
+                        <input type="text" class="form-control" id="license_key" name="license_key" 
+                               placeholder="Enter license key">
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Send Notification
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Notification Preview</h5>
+            </div>
+            <div class="card-body">
+                <div class="notification-preview">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-bell text-primary me-2"></i>
+                        <strong id="previewTitle">Notification Title</strong>
+                    </div>
+                    <p class="text-muted mb-0" id="previewMessage">Notification message will appear here...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Target Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <i class="fas fa-mobile-alt text-info me-2"></i>
+                    <span id="targetInfo">All registered devices</span>
+                </div>
+                <div class="mb-2">
+                    <i class="fas fa-users text-success me-2"></i>
+                    <span id="estimatedReach">Estimated reach: All devices</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Notifications -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Notifications</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-4">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No notifications sent yet</h5>
+                    <p class="text-muted">Notifications you send will appear here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Update preview as user types
+document.getElementById('title').addEventListener('input', function() {
+    document.getElementById('previewTitle').textContent = this.value || 'Notification Title';
+});
+
+document.getElementById('message').addEventListener('input', function() {
+    document.getElementById('previewMessage').textContent = this.value || 'Notification message will appear here...';
+});
+
+// Handle target selection
+document.getElementById('target').addEventListener('change', function() {
+    const licenseSelectGroup = document.getElementById('licenseSelectGroup');
+    const targetInfo = document.getElementById('targetInfo');
+    const estimatedReach = document.getElementById('estimatedReach');
+    
+    if (this.value === 'specific_license') {
+        licenseSelectGroup.style.display = 'block';
+        targetInfo.textContent = 'Specific license holders';
+        estimatedReach.textContent = 'Estimated reach: 1 device';
+    } else {
+        licenseSelectGroup.style.display = 'none';
+        
+        switch(this.value) {
+            case 'all':
+                targetInfo.textContent = 'All registered devices';
+                estimatedReach.textContent = 'Estimated reach: All devices';
+                break;
+            case 'active_licenses':
+                targetInfo.textContent = 'Active license holders only';
+                estimatedReach.textContent = 'Estimated reach: Active devices';
+                break;
+            case 'expiring_soon':
+                targetInfo.textContent = 'Licenses expiring within 7 days';
+                estimatedReach.textContent = 'Estimated reach: Expiring devices';
+                break;
+        }
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const target = document.getElementById('target').value;
+    const licenseKey = document.getElementById('license_key').value;
+    
+    if (target === 'specific_license' && !licenseKey.trim()) {
+        e.preventDefault();
+        alert('Please enter a license key when targeting specific license.');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+    submitBtn.disabled = true;
+    
+    // Re-enable after a delay (in real app, this would be after server response)
+    setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }, 3000);
+});
+</script>
+{% endblock %}
