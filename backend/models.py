@@ -21,8 +21,8 @@ class AdminUser(UserMixin, db.Model):
     last_login = db.Column(db.DateTime)
     
     # Relationships
-    created_licenses = db.relationship('License', backref='creator', lazy='dynamic')
-    revoked_licenses = db.relationship('License', backref='revoker', lazy='dynamic')
+    created_licenses = db.relationship('License', foreign_keys='License.created_by', backref='creator', lazy='dynamic')
+    revoked_licenses = db.relationship('License', foreign_keys='License.revoked_by', backref='revoker', lazy='dynamic')
     
     def __repr__(self):
         return f'<AdminUser {self.username}>'
