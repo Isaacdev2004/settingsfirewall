@@ -98,7 +98,7 @@ class AuditLog(db.Model):
     
     # Foreign keys (optional)
     license_id = db.Column(db.Integer, db.ForeignKey('licenses.id'))
-    device_id = db.Column(db.String(255))  # Store device_id as string for flexibility
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'))  # Changed to proper foreign key
     admin_user_id = db.Column(db.Integer, db.ForeignKey('admin_users.id'))
     
     # Relationships
